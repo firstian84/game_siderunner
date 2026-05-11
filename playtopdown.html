@@ -2,100 +2,191 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kiddow Adventure - Interactive World</title>
     <style>
-        body { margin: 0; background-color: #1a1a1a; overflow: hidden; font-family: sans-serif; }
-        #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
-        #world { position: absolute; width: 3000px; height: 3000px; will-change: transform; }
-        canvas { display: block; image-rendering: pixelated; position: absolute; top: 0; left: 0; z-index: 0; }
+        /* --- RESET & LAYOUT --- */
+        body { 
+            margin: 0; 
+            background-color: #1a1a1a; 
+            overflow: hidden; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        }
+
+        #game-container { 
+            position: relative; 
+            width: 100vw; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+
+        #world { 
+            position: absolute; 
+            width: 3000px; 
+            height: 3000px; 
+            will-change: transform; 
+        }
+
+        canvas { 
+            display: block; 
+            image-rendering: pixelated; 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            z-index: 0; 
+        }
         
+        /* --- PLAYER SPRITE --- */
         #player {
-            width: 200px; height: 200px; position: absolute;
-            background-size: 1000px 1000px; background-repeat: no-repeat;
-            will-change: transform, left, top; margin-left: -100px; margin-top: -180px;
+            width: 200px; 
+            height: 200px; 
+            position: absolute;
+            background-size: 1000px 1000px; 
+            background-repeat: no-repeat;
+            will-change: transform, left, top; 
+            margin-left: -100px; 
+            margin-top: -180px; /* Menempatkan kaki player di koordinat Y */
             pointer-events: none;
+            transition: transform 0.1s;
         }
 
         /* --- UI & MINIMAP --- */
-        #minimap-container {
-            position: fixed; top: 10px; right: 10px;
-            width: 150px; height: 150px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid #fff; border-radius: 8px;
-            z-index: 10001; overflow: hidden;
+        #ui {
+            position: fixed; 
+            top: 10px; 
+            left: 10px;
+            color: white; 
+            background: rgba(0,0,0,0.7);
+            padding: 15px; 
+            border-radius: 8px;
+            z-index: 10000; 
+            border: 1px solid rgba(255,255,255,0.2);
+            pointer-events: none;
         }
+
+        #minimap-container {
+            position: fixed; 
+            top: 10px; 
+            right: 10px;
+            width: 150px; 
+            height: 150px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #fff; 
+            border-radius: 8px;
+            z-index: 10001; 
+            overflow: hidden;
+        }
+
         #minimap-player {
-            position: absolute; width: 8px; height: 8px;
-            background: #00ff00; border-radius: 50%;
-            transform: translate(-50%, -50%); z-index: 10;
+            position: absolute; 
+            width: 8px; 
+            height: 8px;
+            background: #00ff00; 
+            border-radius: 50%;
+            transform: translate(-50%, -50%); 
+            z-index: 10;
             box-shadow: 0 0 5px #00ff00;
         }
+
         .minimap-dot {
-            position: absolute; width: 6px; height: 6px;
-            background: yellow; border-radius: 2px;
-            transform: translate(-50%, -50%); z-index: 5;
+            position: absolute; 
+            width: 6px; 
+            height: 6px;
+            background: yellow; 
+            border-radius: 2px;
+            transform: translate(-50%, -50%); 
+            z-index: 5;
         }
 
-        #ui {
-            position: fixed; top: 10px; left: 10px;
-            color: white; background: rgba(0,0,0,0.6);
-            padding: 12px; border-radius: 8px;
-            z-index: 10000; border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        /* --- CUSTOM MODAL NOTIFICATION --- */
+        /* --- MODAL & NOTIFICATION --- */
         #custom-modal {
-            position: fixed; top: 50%; left: 50%;
+            position: fixed; 
+            top: 50%; 
+            left: 50%;
             transform: translate(-50%, -50%);
-            background: white; padding: 20px;
-            border-radius: 15px; border: 4px solid #ffcc00;
-            text-align: center; z-index: 20000;
-            display: none; box-shadow: 0 0 50px rgba(0,0,0,0.5);
-            min-width: 300px;
+            background: white; 
+            padding: 25px;
+            border-radius: 15px; 
+            border: 4px solid #ffcc00;
+            text-align: center; 
+            z-index: 20000;
+            display: none; 
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            min-width: 320px;
         }
-        #custom-modal p { font-weight: bold; color: #333; margin-bottom: 20px; }
+
+        #custom-modal p { 
+            font-weight: bold; 
+            color: #333; 
+            margin-bottom: 20px; 
+            line-height: 1.5;
+        }
+
         .modal-btn {
-            padding: 10px 25px; margin: 0 10px; border: none;
-            border-radius: 5px; cursor: pointer; font-weight: bold;
+            padding: 10px 25px; 
+            margin: 0 10px; 
+            border: none;
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-weight: bold;
+            transition: opacity 0.2s;
         }
+
         #btn-yes { background: #28a745; color: white; }
         #btn-no { background: #dc3545; color: white; }
-        #btn-yes:hover { background: #218838; }
-        #btn-no:hover { background: #c82333; }
+        .modal-btn:hover { opacity: 0.8; }
 
         #interaction-msg {
-            position: fixed; bottom: 20px; left: 50%;
+            position: fixed; 
+            bottom: 30px; 
+            left: 50%;
             transform: translateX(-50%);
             background: rgba(255, 255, 0, 0.9);
-            color: black; padding: 10px 20px;
-            border-radius: 50px; font-weight: bold;
-            display: none; z-index: 10002;
+            color: black; 
+            padding: 12px 25px;
+            border-radius: 50px; 
+            font-weight: bold;
+            display: none; 
+            z-index: 10002;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
-        .building-object { position: absolute; transform-origin: bottom center; pointer-events: none; }
+        .building-object { 
+            position: absolute; 
+            transform-origin: bottom center; 
+            pointer-events: none; 
+        }
     </style>
 </head>
 <body>
 
+    <!-- Overlay UI -->
     <div id="ui">
-        <b>Kiddow Adventure: Explorer</b><br>
-        - Gunakan Panah untuk Bergerak<br>
-        - Dekati gedung/pinggir peta untuk interaksi kustom.
+        <strong style="color: #ffcc00;">Kiddow Adventure: Explorer</strong><br>
+        <small>
+            • Gunakan Panah (Arrow Keys) untuk Bergerak<br>
+            • Dekati Gedung atau Pinggir Peta untuk Interaksi
+        </small>
     </div>
 
-    <!-- MODAL KUSTOM -->
+    <!-- Modal Konfirmasi -->
     <div id="custom-modal">
-        <p id="modal-text">Apa ingin melanjutkan ke posisi ini?</p>
-        <button id="btn-yes" class="modal-btn">YA</button>
-        <button id="btn-no" class="modal-btn">TIDAK</button>
+        <p id="modal-text">Terdeteksi lokasi baru!<br>Apakah ingin melanjutkan ke posisi ini?</p>
+        <div style="display: flex; justify-content: center;">
+            <button id="btn-yes" class="modal-btn">YA</button>
+            <button id="btn-no" class="modal-btn">TIDAK</button>
+        </div>
     </div>
 
-    <div id="interaction-msg">Membuka Website...</div>
+    <!-- Pesan Loading -->
+    <div id="interaction-msg">Membuka Halaman...</div>
 
+    <!-- Minimap -->
     <div id="minimap-container">
         <div id="minimap-player"></div>
     </div>
     
+    <!-- World Engine -->
     <div id="game-container">
         <div id="world">
             <canvas id="forestCanvas"></canvas>
@@ -105,6 +196,7 @@
     </div>
 
     <script>
+        /** --- CONFIGURATION --- **/
         const canvas = document.getElementById('forestCanvas');
         const ctx = canvas.getContext('2d');
         const world = document.getElementById('world');
@@ -114,7 +206,6 @@
         const miniPlayer = document.getElementById('minimap-player');
         const interMsg = document.getElementById('interaction-msg');
         
-        // Element Modal
         const modal = document.getElementById('custom-modal');
         const modalText = document.getElementById('modal-text');
         const btnYes = document.getElementById('btn-yes');
@@ -125,19 +216,22 @@
         canvas.width = WORLD_SIZE;
         canvas.height = WORLD_SIZE;
 
+        // Assets
         const URL_IDLE = 'https://firstian84.github.io/game_siderunner/firstianKIDDOW-idle.png';
         const URL_RUN = 'https://firstian84.github.io/game_siderunner/firstianKIDDOW-run.png';
         const URL_GEDUNG = 'https://firstian84.github.io/game_siderunner/resjaksel.png';
 
+        // State
         let posX = WORLD_SIZE / 2;
         let posY = WORLD_SIZE / 2;
         let speed = 7;
         let currentFrame = 0;
-        let isPaused = false; // Status untuk menghentikan input saat modal muncul
+        let isPaused = false; 
         let isEdgeTriggered = false; 
         const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
         const buildings = [];
 
+        // Tautan Pinggir Peta
         const edgeLinks = {
             top: "https://www.youtube.com",
             bottom: "https://www.github.com",
@@ -145,14 +239,14 @@
             right: "https://www.wikipedia.org"
         };
 
+        /** --- FUNCTIONS --- **/
+
         function stopPlayer() {
-            keys.ArrowUp = false;
-            keys.ArrowDown = false;
-            keys.ArrowLeft = false;
-            keys.ArrowRight = false;
+            keys.ArrowUp = keys.ArrowDown = keys.ArrowLeft = keys.ArrowRight = false;
         }
 
         function addObject(x, y, width, height, imgUrl, linkUrl) {
+            // Visual di Dunia Utama
             const div = document.createElement('div');
             div.className = 'building-object';
             div.style.width = width + 'px';
@@ -165,33 +259,47 @@
             div.style.zIndex = Math.floor(y);
             objectsLayer.appendChild(div);
 
+            // Titik di Minimap
             const dot = document.createElement('div');
             dot.className = 'minimap-dot';
             dot.style.left = (x / WORLD_SIZE * miniSize) + 'px';
             dot.style.top = (y / WORLD_SIZE * miniSize) + 'px';
             minimap.appendChild(dot);
 
-            buildings.push({ x: x, y: y, width: width * 0.4, height: 60, link: linkUrl, isOpen: false });
+            // Simpan data untuk collision (Trigger berada di kaki gedung)
+            buildings.push({ 
+                x: x, 
+                y: y, 
+                width: width * 0.4, 
+                height: 60, 
+                link: linkUrl, 
+                isOpen: false 
+            });
         }
 
         function initLevel() {
+            // Background Rumput
             ctx.fillStyle = '#2d5e32';
             ctx.fillRect(0, 0, WORLD_SIZE, WORLD_SIZE);
+            
+            // Grid sederhana untuk tekstur tanah
+            ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+            for(let i=0; i<WORLD_SIZE; i+=200) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, WORLD_SIZE); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(WORLD_SIZE, i); ctx.stroke();
+            }
+
+            // Tambah Gedung-gedung
             addObject(WORLD_SIZE/2, WORLD_SIZE/2, 1000, 700, URL_GEDUNG, "https://www.google.com");
             addObject(800, 800, 500, 350, URL_GEDUNG, "https://www.wikipedia.org");
             addObject(2200, 2200, 700, 500, URL_GEDUNG, "https://blog.google");
         }
 
-        // FUNGSI MODAL KUSTOM
         function showCustomModal(description, url) {
             isPaused = true; 
             stopPlayer();
-            modalText.innerHTML = `<b>Terdeteksi!</b><br>${description}<br><br>Melanjutkan ke posisi ini?`;
+            modalText.innerHTML = `<span style="color:#e67e22">⚠️ Deteksi Objek</span><br><b>${description}</b><br><br>Ingin membuka tautan ini?`;
             modal.style.display = 'block';
-
-            // Bersihkan event listener lama
-            btnYes.onclick = null;
-            btnNo.onclick = null;
 
             btnYes.onclick = () => {
                 modal.style.display = 'none';
@@ -200,7 +308,7 @@
                     window.open(url, '_blank');
                     interMsg.style.display = 'none';
                     isPaused = false;
-                }, 500);
+                }, 800);
             };
 
             btnNo.onclick = () => {
@@ -211,13 +319,16 @@
 
         function checkInteractions() {
             if (isPaused) return;
+
+            // Cek Tabrakan Gedung
             buildings.forEach(b => {
                 const dx = Math.abs(posX - b.x);
                 const dy = Math.abs(posY - b.y);
                 if (dx < b.width / 2 && dy < b.height) {
                     if (!b.isOpen) {
                         b.isOpen = true;
-                        showCustomModal("Gedung Terdeteksi", b.link);
+                        showCustomModal("Gedung Jaksel", b.link);
+                        // Delay agar tidak langsung trigger lagi saat modal ditutup
                         setTimeout(() => { b.isOpen = false; }, 5000);
                     }
                 }
@@ -232,7 +343,7 @@
                 if (keys.ArrowLeft) { posX -= speed; dirX = -1; }
                 if (keys.ArrowRight) { posX += speed; dirX = 1; }
 
-                // EDGE DETECTION
+                // DETEKSI BATAS PETA (EDGE)
                 let triggeredUrl = null;
                 if (posY <= 0) triggeredUrl = edgeLinks.top;
                 else if (posY >= WORLD_SIZE) triggeredUrl = edgeLinks.bottom;
@@ -241,19 +352,21 @@
 
                 if (triggeredUrl && !isEdgeTriggered) {
                     isEdgeTriggered = true;
-                    // Beri jarak sedikit dari pinggir agar tidak macet
-                    if (posY <= 0) posY = 60;
-                    if (posY >= WORLD_SIZE) posY = WORLD_SIZE - 60;
-                    if (posX <= 0) posX = 60;
-                    if (posX >= WORLD_SIZE) posX = WORLD_SIZE - 60;
+                    // Mental sedikit agar tidak stuck di ujung
+                    if (posY <= 0) posY = 50;
+                    if (posY >= WORLD_SIZE) posY = WORLD_SIZE - 50;
+                    if (posX <= 0) posX = 50;
+                    if (posX >= WORLD_SIZE) posX = WORLD_SIZE - 50;
 
-                    showCustomModal("Batas Peta Terdeteksi", triggeredUrl);
+                    showCustomModal("Batas Wilayah", triggeredUrl);
                     setTimeout(() => { isEdgeTriggered = false; }, 4000);
                 }
 
+                // Batasi pergerakan di dalam WORLD_SIZE
                 posX = Math.max(0, Math.min(WORLD_SIZE, posX));
                 posY = Math.max(0, Math.min(WORLD_SIZE, posY));
 
+                // Update Posisi Player & Camera
                 player.style.left = posX + 'px';
                 player.style.top = posY + 'px';
                 player.style.zIndex = Math.floor(posY);
@@ -263,6 +376,7 @@
                 const camY = -posY + (window.innerHeight / 2);
                 world.style.transform = `translate(${camX}px, ${camY}px)`;
 
+                // Update Minimap
                 miniPlayer.style.left = (posX / WORLD_SIZE * miniSize) + 'px';
                 miniPlayer.style.top = (posY / WORLD_SIZE * miniSize) + 'px';
 
@@ -278,18 +392,31 @@
             }
             const isMoving = keys.ArrowUp || keys.ArrowDown || keys.ArrowLeft || keys.ArrowRight;
             player.style.backgroundImage = isMoving ? `url('${URL_RUN}')` : `url('${URL_IDLE}')`;
+            
+            // Logika Sprite Sheet (5x5 grid)
             const col = currentFrame % 5;
             const row = Math.floor(currentFrame / 5);
             player.style.backgroundPosition = `-${col * 200}px -${row * 200}px`;
             currentFrame = (currentFrame + 1) % 25;
         }
 
-        window.addEventListener('keydown', (e) => { if (!isPaused && keys.hasOwnProperty(e.key)) keys[e.key] = true; });
-        window.addEventListener('keyup', (e) => { if (keys.hasOwnProperty(e.key)) keys[e.key] = false; });
+        /** --- EVENT LISTENERS --- **/
+        window.addEventListener('keydown', (e) => { 
+            if (!isPaused && keys.hasOwnProperty(e.key)) {
+                keys[e.key] = true;
+                e.preventDefault(); // Mencegah scroll halaman
+            }
+        });
+        
+        window.addEventListener('keyup', (e) => { 
+            if (keys.hasOwnProperty(e.key)) keys[e.key] = false; 
+        });
 
+        // Initialize Game
         initLevel();
         setInterval(animateSprite, 60); 
         update();
+
     </script>
 </body>
 </html>
